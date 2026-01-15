@@ -13,15 +13,19 @@ interface User {
 
 interface UserManagementProps {
   searchQuery?: string;
+  createUserRequestId?: number;
 }
 
-const UserManagement: React.FC<UserManagementProps> = ({ searchQuery = '' }) => {
+const UserManagement: React.FC<UserManagementProps> = ({ searchQuery = '', createUserRequestId = 0 }) => {
   const [showPasswords, setShowPasswords] = useState<{ [key: string]: boolean }>({});
   const [localSearch, setLocalSearch] = useState('');
   const [users, setUsers] = useState<User[]>([]);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ name: '', email: '', password: '', status: '有効' as '有効' | '無効' });
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({ name: '', email: '', password: '', status: '有効' as '有効' | '無効' });
+  const [createError, setCreateError] = useState('');
 
   // 初期データの読み込み
   useEffect(() => {
@@ -38,6 +42,14 @@ const UserManagement: React.FC<UserManagementProps> = ({ searchQuery = '' }) => 
       initializeDefaultUsers();
     }
   }, []);
+
+  useEffect(() => {
+    if (createUserRequestId) {
+      setIsCreateOpen(true);
+      setCreateError('');
+      setCreateForm({ name: '', email: '', password: '', status: '有効' });
+    }
+  }, [createUserRequestId]);
 
   const initializeDefaultUsers = () => {
     const defaultUsers: User[] = [
@@ -90,6 +102,27 @@ const UserManagement: React.FC<UserManagementProps> = ({ searchQuery = '' }) => 
     saveUsers(updatedUsers);
     setEditingUser(null);
     setEditForm({ name: '', email: '', password: '', status: '有効' });
+  };
+
+  const handleCreateUser = () => {
+    if (!createForm.name || !createForm.email || !createForm.password) {
+      setCreateError('名前・メールアドレス・パスワードは必須です');
+      return;
+    }
+
+    const newUser: User = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      name: createForm.name,
+      initial: createForm.name.charAt(0),
+      email: createForm.email,
+      password: createForm.password,
+      status: createForm.status,
+    };
+
+    saveUsers([newUser, ...users]);
+    setIsCreateOpen(false);
+    setCreateForm({ name: '', email: '', password: '', status: '有効' });
+    setCreateError('');
   };
 
   const handleDelete = (id: string) => {
@@ -354,6 +387,98 @@ const UserManagement: React.FC<UserManagementProps> = ({ searchQuery = '' }) => 
               >
                 <Trash2 size={18} />
                 削除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 新規作成モーダル */}
+      {isCreateOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out]">
+          <div className="bg-white rounded-[32px] p-8 max-w-md w-full mx-4 shadow-2xl animate-[slideUp_0.3s_ease-out]">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">ユーザーを追加</h2>
+              <button
+                onClick={() => {
+                  setIsCreateOpen(false);
+                  setCreateError('');
+                  setCreateForm({ name: '', email: '', password: '', status: '有効' });
+                }}
+                className="text-gray-400 hover:text-gray-600 p-1"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-[12px] font-bold text-gray-400 uppercase mb-1.5 block">名前</label>
+                <input
+                  type="text"
+                  value={createForm.name}
+                  onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-[15px]"
+                  placeholder="ユーザー名"
+                />
+              </div>
+
+              <div>
+                <label className="text-[12px] font-bold text-gray-400 uppercase mb-1.5 block">メールアドレス</label>
+                <input
+                  type="email"
+                  value={createForm.email}
+                  onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-[15px]"
+                  placeholder="email@example.com"
+                />
+              </div>
+
+              <div>
+                <label className="text-[12px] font-bold text-gray-400 uppercase mb-1.5 block">パスワード</label>
+                <input
+                  type="text"
+                  value={createForm.password}
+                  onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-[15px]"
+                  placeholder="パスワード"
+                />
+              </div>
+
+              <div>
+                <label className="text-[12px] font-bold text-gray-400 uppercase mb-1.5 block">ステータス</label>
+                <select
+                  value={createForm.status}
+                  onChange={(e) => setCreateForm({ ...createForm, status: e.target.value as '有効' | '無効' })}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-[15px]"
+                >
+                  <option value="有効">有効</option>
+                  <option value="無効">無効</option>
+                </select>
+              </div>
+
+              {createError && (
+                <p className="text-[12px] font-bold text-red-500">{createError}</p>
+              )}
+            </div>
+
+            <div className="flex items-center gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setIsCreateOpen(false);
+                  setCreateError('');
+                  setCreateForm({ name: '', email: '', password: '', status: '有効' });
+                }}
+                className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-colors"
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleCreateUser}
+                className="flex-1 py-3 bg-blue-500 text-white rounded-xl font-bold hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+              >
+                <Save size={18} />
+                追加
               </button>
             </div>
           </div>

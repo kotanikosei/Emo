@@ -10,6 +10,7 @@ interface AdminDashboardProps {
 
 const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
   const [activeTab, setActiveTab] = useState<'users' | 'stats'>('users');
+  const [createUserRequestId, setCreateUserRequestId] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
 
   return (
@@ -108,11 +109,26 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout }) => {
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
-          {activeTab === 'users' ? <UserManagement searchQuery={searchQuery} /> : <AdminStatistics searchQuery={searchQuery} />}
+          {activeTab === 'users' ? (
+            <UserManagement searchQuery={searchQuery} createUserRequestId={createUserRequestId} />
+          ) : (
+            <AdminStatistics searchQuery={searchQuery} />
+          )}
         </div>
 
         {/* Floating Action Button */}
-        <button className="fixed bottom-10 right-10 w-14 h-14 bg-[#1C1C1E] text-white rounded-2xl shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all group">
+        <button
+          onClick={() => {
+            if (activeTab === 'users') {
+              setCreateUserRequestId(Date.now());
+            }
+          }}
+          className={`fixed bottom-10 right-10 w-14 h-14 rounded-2xl shadow-2xl flex items-center justify-center transition-all group ${
+            activeTab === 'users'
+              ? 'bg-[#1C1C1E] text-white hover:scale-105 active:scale-95'
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+          }`}
+        >
           <Plus size={28} className="group-hover:rotate-90 transition-transform duration-300" />
         </button>
       </main>
