@@ -23,17 +23,19 @@
    npm install
    ```
 
-2. テンプレートから `.env` を作成:
+2. テンプレートから `.env` を作成（任意）:
 
    ```bash
    cp env.example .env
    ```
 
-3. `.env` で必要な API キーを設定:
+3. `.env` で必要な API キーを設定（いずれか 1 つ以上）:
 
    - `GEMINI_API_KEY` / `VITE_GEMINI_API_KEY`
    - `OPENAI_API_KEY` / `VITE_OPENAI_API_KEY`
    - `CLAUDE_API_KEY` / `VITE_CLAUDE_API_KEY`
+
+   API キーを設定しない場合でも、フォールバックでアプリは動作します。
 
    Laravel バックエンドを使う場合は以下を設定:
 
@@ -53,6 +55,11 @@ Vite はデフォルトで `http://localhost:3000` で起動します。
 npm run build
 npm run preview
 ```
+
+## Cloud Run（Docker）
+
+Cloud Run でのデプロイ方法は `README.md` の「Cloud Run でのデプロイ」を参照してください。
+Vite の `VITE_` 系環境変数はビルド時に埋め込まれるため、必要な場合はビルド前に `.env` を用意します。
 
 ## よく使う npm scripts
 
